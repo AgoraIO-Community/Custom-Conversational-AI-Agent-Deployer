@@ -1,5 +1,5 @@
 name: custom-conversational-ai-digitalocean
-description: A Typescript Pulumi program for deploying custom conversational ai agents.
+description: A Typescript Pulumi program for deploying custom conversational ai agents on DigitalOcean.
 runtime:
   name: nodejs
   options:
