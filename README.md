@@ -13,6 +13,8 @@ Platforms:
 
 - [Pulumi CLI](https://www.pulumi.com/docs/get-started/install/)
 - [Node.js](https://nodejs.org/) (v14 or later)
+- [agent](https://github.com/AgoraIO/openai-realtime-python)
+- [router](https://github.com/AgoraIO-Community/conversational-ai-agent-router)
 
 ## Installation
 
@@ -23,15 +25,11 @@ git clone https://github.com/AgoraIO-Community/custom_conversational_ai
 cd custom_conversational_ai
 ```
 
-1. Run the clone script to fetch agent and router repositories:
+1. Run the clone script to fetch [agent](https://github.com/AgoraIO/openai-realtime-python) and [agent-router](https://github.com/AgoraIO-Community/conversational-ai-agent-router) repositories.
 
 ```bash
 ./clone_repos.sh
 ```
-
-This will clone the [agent](https://github.com/AgoraIO/openai-realtime-python) and [router](https://github.com/AgoraIO-Community/conversational-ai-agent-router) repositories into the `openai-realtime-python` and `conversational-ai-agent-router` directories respectively.
-
-To customize the system prompt, set the `systemInstruction` for the platform you want to deploy to, this will avoid the need to modify the agent code directly.
 
 1. Navigate to the platform you want to deploy to:
 
@@ -48,6 +46,10 @@ cd digital-ocean
 ```
 
 3. Open the `README.md` file for the platform you want to deploy to and follow the instructions to configure the secrets and deploy the infrastructure.
+
+## Customizing the System Prompt
+
+To customize the system prompt, set the `systemInstruction` for the platform you want to deploy to, this will avoid the need to modify the agent code directly.
 
 ## Scaling
 
