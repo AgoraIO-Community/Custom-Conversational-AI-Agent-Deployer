@@ -44,7 +44,7 @@ pulumi up       # Deploy infrastructure
 pulumi preview
 ```
 
-2. Deploy the infrastructure using DigitalOcean:
+2. Deploy the infrastructure:
 
 ```bash
 pulumi up
@@ -68,18 +68,21 @@ pulumi stack output
 
 This will show:
 
-- Redis URI
-- Agent IP addresses
-- Proxy Router IP address
+- Redis host and port
+- Agent public and private IP addresses
+- Proxy Router public and private IP address
+- ECR Registry URLs for proxy and agent
 
 ## Development
 
 The infrastructure code is in `index.ts` and includes:
 
-- Container registry setup
-- Agent droplet creation
-- Proxy router configuration
-- Network and security settings
+- Container registry setup (ECR repositories for proxy and agent)
+- VPC configuration with public/private subnets
+- Agent EC2 instance creation with auto-scaling
+- Proxy router configuration and deployment
+- Redis cluster setup
+- Network security and IAM configuration
 
 ## Architecture
 
@@ -99,21 +102,26 @@ The infrastructure consists of:
 - **Compute Resources**
 
   - Agent Instances (3x c5.xlarge)
-    - Deployed in private subnets
+    - 4 vCPUs, 8GB RAM per instance
+    - Deployed in private subnets (distributed across AZs)
     - Running containerized OpenAI agents
     - Configured with Agora RTC support
+    - Auto-configured with Docker and AWS ECR login
+    - Capacity controlled by `maxRequestsPerBackend` config
   - Proxy Router Instance (t3.micro)
     - Deployed in public subnet
     - Handles load balancing and request routing
     - Manages agent connection mapping
+    - Auto-configured with Docker and environment setup
 
 - **Redis Cluster**
 
   - ElastiCache Redis 7.0
   - Single node configuration (cache.t3.micro)
   - Encryption at rest and in transit
-  - Authentication enabled
+  - Authentication enabled with auto-generated credentials
   - Used for session state and routing information
+  - Dedicated subnet group for deployment
 
 - **Security Groups**
 
@@ -123,13 +131,16 @@ The infrastructure consists of:
     - Allows internal VPC communication
   - Proxy Security Group
     - Allows HTTP (8080)
+    - Full egress access
   - Redis Security Group
     - Allows access only from proxy router (6379)
+    - No other inbound access permitted
 
 - **IAM Configuration**
   - EC2 instance profile with:
     - ECR read access
     - Systems Manager access
+    - Minimal required permissions model
 
 ## Security Notes
 

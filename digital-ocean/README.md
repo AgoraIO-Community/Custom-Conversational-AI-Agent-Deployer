@@ -96,6 +96,7 @@ The infrastructure consists of:
   - Redis 7 cluster
   - Single node deployment (db-s-1vcpu-1gb)
   - Maintains session state and routing information
+  - Accessible only within VPC
 - VPC (172.16.0.0/24):
   - Securely connects all services
   - Located in NYC1 region
