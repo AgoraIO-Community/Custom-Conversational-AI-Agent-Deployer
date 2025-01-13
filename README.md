@@ -29,6 +29,10 @@ cd custom_conversational_ai
 ./clone_repos.sh
 ```
 
+This will clone the [agent](https://github.com/AgoraIO/openai-realtime-python) and [router](https://github.com/AgoraIO-Community/conversational-ai-agent-router) repositories into the `openai-realtime-python` and `conversational-ai-agent-router` directories respectively.
+
+To customize the system prompt, set the `systemInstruction` for the platform you want to deploy to, this will avoid the need to modify the agent code directly.
+
 1. Navigate to the platform you want to deploy to:
 
 AWS
