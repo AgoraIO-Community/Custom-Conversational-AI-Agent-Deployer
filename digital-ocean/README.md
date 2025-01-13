@@ -7,11 +7,27 @@ This folder contains the infrastructure as code for deploying a custom conversat
 The infrastructure consists of:
 
 - Container Registry: Hosts Docker images for the proxy router and realtime agents
-- Multiple Agent Instances: Handles OpenAI API communication
-- Proxy Router: Load balances requests across agent instances
-- Redis Database: Maintains session state and routing information
-- VPC: Securely connects all services
-- Firewall Rules: Manages access control and network security
+- Multiple Agent Instances (3 droplets):
+  - Handles OpenAI API communication
+  - Runs on c-4 instances (4 vCPUs, 8GB RAM)
+  - Containerized using Docker
+- Proxy Router:
+  - Load balances requests across agent instances
+  - Runs on s-1vcpu-1gb instance
+  - Manages request distribution and backend mapping
+- Redis Database:
+  - Redis 7 cluster
+  - Single node deployment (db-s-1vcpu-1gb)
+  - Maintains session state and routing information
+- VPC (172.16.0.0/24):
+  - Securely connects all services
+  - Located in NYC1 region
+- Firewall Rules:
+  - HTTP API access (port 8080)
+  - Internal VPC communication
+  - Agora RTC UDP ports (1024-65535)
+  - Restricted Redis access
+  - Managed outbound traffic
 
 ## Prerequisites
 

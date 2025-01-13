@@ -6,12 +6,51 @@ This folder contains the infrastructure as code for deploying a custom conversat
 
 The infrastructure consists of:
 
-- Container Registry: Hosts Docker images for the proxy router and realtime agents
-- Multiple Agent Instances: Handles OpenAI API communication
-- Proxy Router: Load balances requests across agent instances
-- Redis Database: Maintains session state and routing information
-- VPC: Securely connects all services
-- Firewall Rules: Manages access control and network security
+- **VPC Infrastructure**
+
+  - Configured across 2 availability zones
+  - Public and private subnets (CIDR mask /20)
+  - NAT Gateways (one per AZ) for private subnet internet access
+
+- **Container Registry (ECR)**
+
+  - Proxy Router Repository
+  - Agent Repository
+
+- **Compute Resources**
+
+  - Agent Instances (3x c5.xlarge)
+    - Deployed in private subnets
+    - Running containerized OpenAI agents
+    - Configured with Agora RTC support
+  - Proxy Router Instance (t3.micro)
+    - Deployed in public subnet
+    - Handles load balancing and request routing
+    - Manages agent connection mapping
+
+- **Redis Cluster**
+
+  - ElastiCache Redis 7.0
+  - Single node configuration (cache.t3.micro)
+  - Encryption at rest and in transit
+  - Authentication enabled
+  - Used for session state and routing information
+
+- **Security Groups**
+
+  - Agent Security Group
+    - Allows HTTP (8080)
+    - Allows Agora RTC (UDP 1024-65535)
+    - Allows internal VPC communication
+  - Proxy Security Group
+    - Allows HTTP (8080)
+  - Redis Security Group
+    - Allows access only from proxy router (6379)
+
+- **IAM Configuration**
+  - EC2 instance profile with:
+    - ECR read access
+    - Systems Manager access
 
 ## Prerequisites
 
@@ -94,10 +133,14 @@ pulumi destroy
 
 ## Security Notes
 
-- Remember to add your SSH keys to the droplet configurations
-- All sensitive information should be stored as Pulumi secrets
-- The VPC isolates the infrastructure components
-- Firewall rules are configured for minimum required access
+- All components run within a dedicated VPC
+- Private subnets used for agent instances and Redis
+- Redis encryption enabled both at rest and in transit
+- Security groups implement principle of least privilege
+- IAM roles configured with minimal required permissions
+- All sensitive configuration stored as Pulumi secrets
+- Authentication required for Redis access
+- Proxy router controls access to backend services
 
 ## Contributing
 

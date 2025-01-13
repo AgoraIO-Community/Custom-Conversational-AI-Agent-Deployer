@@ -36,3 +36,14 @@ cd aws
 ```
 
 3. Open the README.md file in the platform you want to deploy to and follow the instructions to configure the secrets and deploy the infrastructure.
+
+## Scaling
+
+Currently the deployment is set up to run 3 agent instances on relatively modest hardware. This results in a maximum of 11-16 concurrent conversations per agent server and a maximum of 33-48 concurrent conversations.
+
+We set the default maximum number of requests per backend to 11 to avoid overloading the agent instances, which results in a maximum of 33 concurrent conversations.
+
+To scale up there are a two options that can be used separately or together:
+
+1. Use more powerful instances for the agent instances
+2. Increase the number of agent instances
