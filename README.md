@@ -4,10 +4,10 @@ This repository contains Pulumi scripts for deploying a custom conversational AI
 
 Platforms:
 
-- DigitalOcean
 - AWS
-- Azure (Coming Soon)
-- GCP (Coming Soon)
+- Azure **(Coming Soon)**
+- DigitalOcean
+- GCP **(Coming Soon)**
 
 ## Prerequisites
 
@@ -32,7 +32,7 @@ cd custom_conversational_ai
 1. Navigate to the platform you want to deploy to:
 
 ```bash
-cd digital-ocean
+cd aws
 ```
 
 3. Open the README.md file in the platform you want to deploy to and follow the instructions to configure the secrets and deploy the infrastructure.
