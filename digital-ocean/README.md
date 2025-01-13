@@ -1,6 +1,6 @@
 # Custom Conversational AI Agent
 
-This repository contains the infrastructure as code for deploying a custom conversational agent. The infrastructure deploys a scalable system on DigitalOcean that includes agent instances, a proxy router, and a Redis database, managed using Pulumi.
+This folder contains the infrastructure as code for deploying a custom conversational agent. The infrastructure deploys a scalable system on DigitalOcean that includes agent instances, a proxy router, and a Redis database, managed using Pulumi.
 
 ## Architecture
 
@@ -45,27 +45,6 @@ pulumi preview  # Review changes
 pulumi up       # Deploy infrastructure
 ```
 
-## Installation
-
-1. Clone the main repository:
-
-```bash
-git clone https://github.com/AgoraIO-Community/conversational-ai-platforms
-cd conversational-ai-platforms
-```
-
-2. Run the clone script to fetch agent and router repositories:
-
-```bash
-./clone_repos.sh
-```
-
-3. Navigate to your chosen platform directory:
-
-```bash
-cd digital-ocean
-```
-
 ## Deployment
 
 1. Preview the changes:
@@ -74,7 +53,7 @@ cd digital-ocean
 pulumi preview
 ```
 
-2. Deploy the infrastructure:
+2. Deploy the infrastructure using DigitalOcean:
 
 ```bash
 pulumi up

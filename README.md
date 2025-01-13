@@ -5,7 +5,7 @@ This repository contains Pulumi scripts for deploying a custom conversational AI
 Platforms:
 
 - DigitalOcean
-- AWS (Coming Soon)
+- AWS (In Progress...)
 - Azure (Coming Soon)
 - GCP (Coming Soon)
 
@@ -20,9 +20,16 @@ Platforms:
 
 ```bash
 git clone https://github.com/AgoraIO-Community/custom_conversational_ai
+cd custom_conversational_ai
 ```
 
-2. Navigate to the platform you want to deploy to:
+1. Run the clone script to fetch agent and router repositories:
+
+```bash
+./clone_repos.sh
+```
+
+1. Navigate to the platform you want to deploy to:
 
 ```bash
 cd digital-ocean
