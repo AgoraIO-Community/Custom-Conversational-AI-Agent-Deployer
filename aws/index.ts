@@ -34,7 +34,7 @@ const vpc = new awsx.ec2.Vpc('custom-agent-vpc', {
     },
   ],
   natGateways: {
-    strategy: 'Single', // Or "OnePerAz" if you need one NAT Gateway per AZ
+    strategy: 'OnePerAz', // Or "Single" if you need one NAT Gateway
   },
 })
 
@@ -89,6 +89,7 @@ const agentImage = new docker.Image('realtime-agent', {
 // Create ElastiCache (Redis) subnet group
 const redisSubnetGroup = new aws.elasticache.SubnetGroup('redis-subnet-group', {
   subnetIds: vpc.privateSubnetIds,
+  name: 'custom-agent-redis-subnets',
 })
 
 // Create agent security group first
@@ -161,9 +162,16 @@ const redisAuthToken = new random.RandomPassword('redis-auth-token', {
   special: false,
 })
 
+// Add a random string to make the Redis name unique
+const redisNameSuffix = new random.RandomString('redis-suffix', {
+  length: 8,
+  special: false,
+  upper: false,
+})
+
 // Create Redis cluster
 const redis = new aws.elasticache.ReplicationGroup('custom-agent-redis', {
-  replicationGroupId: 'custom-agent-redis',
+  replicationGroupId: pulumi.interpolate`custom-agent-redis-${redisNameSuffix.result}`,
   description: 'Redis replication group for custom agent',
   nodeType: 'cache.t3.micro',
   numCacheClusters: 1,
@@ -214,22 +222,24 @@ const instanceProfile = new aws.iam.InstanceProfile('instance-profile', {
 
 // Helper function to create agent instances
 const createAgentInstance = (name: string, index: number) => {
-  return new aws.ec2.Instance(name, {
-    ami: aws.ec2.getAmiOutput({
-      mostRecent: true,
-      owners: ['amazon'],
-      filters: [
-        {
-          name: 'name',
-          values: ['amzn2-ami-hvm-*-x86_64-gp2'],
-        },
-      ],
-    }).id,
-    instanceType: 'c5.xlarge',
-    subnetId: vpc.publicSubnetIds[index % 2],
-    vpcSecurityGroupIds: [agentSecurityGroup.id],
-    iamInstanceProfile: instanceProfile.name,
-    userData: pulumi.interpolate`#!/bin/bash
+  // Wait for VPC subnets to be available
+  return vpc.privateSubnetIds.apply((subnetIds) => {
+    return new aws.ec2.Instance(name, {
+      ami: aws.ec2.getAmiOutput({
+        mostRecent: true,
+        owners: ['amazon'],
+        filters: [
+          {
+            name: 'name',
+            values: ['amzn2-ami-hvm-*-x86_64-gp2'],
+          },
+        ],
+      }).id,
+      instanceType: 'c5.xlarge',
+      subnetId: subnetIds[index % 2],
+      vpcSecurityGroupIds: [agentSecurityGroup.id],
+      iamInstanceProfile: instanceProfile.name,
+      userData: pulumi.interpolate`#!/bin/bash
 set -euo pipefail
 
 exec 1>/var/log/agent-startup.log 2>&1
@@ -253,32 +263,60 @@ yum update -y
 
 log "Installing Docker..."
 yum install -y docker
+
+log "Starting Docker service..."
 systemctl start docker
+if ! systemctl is-active docker >/dev/null 2>&1; then
+    log "ERROR: Docker failed to start"
+    systemctl status docker
+    exit 1
+fi
+
 systemctl enable docker
 
-# Add ec2-user to docker group with proper permissions
+# Add ec2-user to docker group
 log "Configuring Docker permissions..."
 usermod -a -G docker ec2-user
-usermod -a -G docker ssm-user
 
-# Restart Docker to ensure group changes take effect
+# Restart Docker and wait for it to be ready
 log "Restarting Docker service..."
 systemctl restart docker
 
-# Wait for Docker to be ready
+# Wait for Docker to be ready with timeout
 log "Waiting for Docker service to be fully available..."
-for i in {1..30}; do
+TIMEOUT=300
+while [ $TIMEOUT -gt 0 ]; do
     if docker info >/dev/null 2>&1; then
         log "Docker is ready"
         break
     fi
-    log "Attempt $i: Docker not ready yet..."
+    log "Waiting for Docker... ($TIMEOUT seconds remaining)"
     sleep 10
+    TIMEOUT=$((TIMEOUT - 10))
 done
 
-# Login to ECR
+if [ $TIMEOUT -le 0 ]; then
+    log "ERROR: Docker failed to become ready within timeout"
+    docker info || true
+    systemctl status docker
+    exit 1
+fi
+
+# Login to ECR with retry
 log "Logging into ECR..."
-aws ecr get-login-password --region ${awsRegion} | docker login --username AWS --password-stdin ${agentRegistry.repositoryUrl}
+MAX_RETRIES=5
+for i in $(seq 1 $MAX_RETRIES); do
+    if aws ecr get-login-password --region ${awsRegion} | docker login --username AWS --password-stdin ${agentRegistry.repositoryUrl}; then
+        log "Successfully logged into ECR"
+        break
+    fi
+    if [ $i -eq $MAX_RETRIES ]; then
+        log "ERROR: Failed to log into ECR after $MAX_RETRIES attempts"
+        exit 1
+    fi
+    log "ECR login attempt $i failed, retrying in 10 seconds..."
+    sleep 10
+done
 
 # Create environment file
 log "Creating environment file..."
@@ -297,26 +335,40 @@ log "Environment file created"
 
 # Pull and run container
 log "Pulling agent image..."
-docker pull ${agentImage.imageName}
+if ! docker pull ${agentImage.imageName}; then
+    log "ERROR: Failed to pull image"
+    exit 1
+fi
+log "Successfully pulled agent image"
 
 log "Starting agent container..."
-docker run -d \
+if ! docker run -d \
     --name agent \
     -p 8080:8080 \
     --env-file /etc/agent.env \
     -v /etc/agent.env:/app/.env:ro \
     --restart unless-stopped \
-    ${agentImage.imageName}
-
-# Verify container is running
-if ! docker ps | grep agent; then
-    log "Container failed to start. Docker logs:"
-    docker logs agent
+    ${agentImage.imageName}; then
+    log "ERROR: Failed to start container"
+    docker logs agent || true
     exit 1
 fi
 
-log "=== Agent setup complete at $(date) ==="
+# Verify container is running
+log "Verifying container is running..."
+sleep 10  # Give container time to stabilize
+if ! docker ps | grep agent; then
+    log "ERROR: Container is not running"
+    log "Docker logs:"
+    docker logs agent || true
+    log "Docker container status:"
+    docker ps -a
+    exit 1
+fi
+
+log "=== Agent setup completed successfully at $(date) ==="
 `,
+    })
   })
 }
 
