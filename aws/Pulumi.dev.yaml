@@ -17,6 +17,3 @@ config:
     secure: ''
   custom-conversational-ai-aws:openaiModel: gpt-4o-realtime-preview
   custom-conversational-ai-aws:proxyPort: '8080'
-  custom-conversational-ai-aws:systemInstruction: Your custom system prompt here...
-  custom-conversational-ai-aws:sshPublicKey:
-    secure: ''
