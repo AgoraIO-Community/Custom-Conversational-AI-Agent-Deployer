@@ -4,9 +4,9 @@ This repository contains Pulumi scripts for deploying a custom conversational AI
 
 Platforms:
 
-- AWS
+- [AWS](aws/README.md)
 - Azure **(Coming Soon)**
-- DigitalOcean
+- [DigitalOcean](digital-ocean/README.md)
 - GCP **(Coming Soon)**
 
 ## Prerequisites
