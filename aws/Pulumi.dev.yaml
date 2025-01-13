@@ -1,0 +1,22 @@
+config:
+  pulumi:template: typescript
+  # AWS
+  aws:accessKey:
+    secure: ''
+  aws:secretKey:
+    secure: ''
+  aws:region: ''
+  custom-conversational-ai-aws:agoraAppCert:
+    secure: ''
+  custom-conversational-ai-aws:agoraAppId:
+    secure: ''
+  custom-conversational-ai-aws:allowOrigin: '*'
+  custom-conversational-ai-aws:mappingTtlInSeconds: '3600'
+  custom-conversational-ai-aws:maxRequestsPerBackend: '11'
+  custom-conversational-ai-aws:openaiApiKey:
+    secure: ''
+  custom-conversational-ai-aws:openaiModel: gpt-4o-realtime-preview
+  custom-conversational-ai-aws:proxyPort: '8080'
+  custom-conversational-ai-aws:systemInstruction: Your custom system prompt here...
+  custom-conversational-ai-aws:sshPublicKey:
+    secure: ''
