@@ -31,11 +31,19 @@ cd custom_conversational_ai
 
 1. Navigate to the platform you want to deploy to:
 
+AWS
+
 ```bash
 cd aws
 ```
 
-3. Open the README.md file in the platform you want to deploy to and follow the instructions to configure the secrets and deploy the infrastructure.
+DigitalOcean
+
+```bash
+cd digital-ocean
+```
+
+3. Open the `README.md` file for the platform you want to deploy to and follow the instructions to configure the secrets and deploy the infrastructure.
 
 ## Scaling
 

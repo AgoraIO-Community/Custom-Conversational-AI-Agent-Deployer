@@ -2,33 +2,6 @@
 
 This folder contains the infrastructure as code for deploying a custom conversational agent. The infrastructure deploys a scalable system on DigitalOcean that includes agent instances, a proxy router, and a Redis database, managed using Pulumi.
 
-## Architecture
-
-The infrastructure consists of:
-
-- Container Registry: Hosts Docker images for the proxy router and realtime agents
-- Multiple Agent Instances (3 droplets):
-  - Handles OpenAI API communication
-  - Runs on c-4 instances (4 vCPUs, 8GB RAM)
-  - Containerized using Docker
-- Proxy Router:
-  - Load balances requests across agent instances
-  - Runs on s-1vcpu-1gb instance
-  - Manages request distribution and backend mapping
-- Redis Database:
-  - Redis 7 cluster
-  - Single node deployment (db-s-1vcpu-1gb)
-  - Maintains session state and routing information
-- VPC (172.16.0.0/24):
-  - Securely connects all services
-  - Located in NYC1 region
-- Firewall Rules:
-  - HTTP API access (port 8080)
-  - Internal VPC communication
-  - Agora RTC UDP ports (1024-65535)
-  - Restricted Redis access
-  - Managed outbound traffic
-
 ## Prerequisites
 
 - [Pulumi CLI](https://www.pulumi.com/docs/get-started/install/)
@@ -75,6 +48,14 @@ pulumi preview
 pulumi up
 ```
 
+## Cleanup
+
+To destroy the infrastructure:
+
+```bash
+pulumi destroy
+```
+
 ## Infrastructure Outputs
 
 After deployment, you can access important information using:
@@ -98,13 +79,32 @@ The infrastructure code is in `index.ts` and includes:
 - Proxy router configuration
 - Network and security settings
 
-## Cleanup
+## Architecture
 
-To destroy the infrastructure:
+The infrastructure consists of:
 
-```bash
-pulumi destroy
-```
+- Container Registry: Hosts Docker images for the proxy router and realtime agents
+- Multiple Agent Instances (3 droplets):
+  - Handles OpenAI API communication
+  - Runs on c-4 instances (4 vCPUs, 8GB RAM)
+  - Containerized using Docker
+- Proxy Router:
+  - Load balances requests across agent instances
+  - Runs on s-1vcpu-1gb instance
+  - Manages request distribution and backend mapping
+- Redis Database:
+  - Redis 7 cluster
+  - Single node deployment (db-s-1vcpu-1gb)
+  - Maintains session state and routing information
+- VPC (172.16.0.0/24):
+  - Securely connects all services
+  - Located in NYC1 region
+- Firewall Rules:
+  - HTTP API access (port 8080)
+  - Internal VPC communication
+  - Agora RTC UDP ports (1024-65535)
+  - Restricted Redis access
+  - Managed outbound traffic
 
 ## Security Notes
 
