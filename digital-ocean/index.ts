@@ -98,23 +98,24 @@ const agentImage = new docker.Image('realtime-agent', {
   },
 })
 
-// Create a Redis cluster for maintaining session state and routing information
-const redisDb = new digitalocean.DatabaseCluster('custom-agent-redis', {
-  engine: 'redis',
-  version: '7',
-  size: 'db-s-1vcpu-1gb',
-  region: 'nyc1',
-  nodeCount: 1,
-})
-
 // Create a Virtual Private Cloud (VPC) to securely connect our services
 const vpc = new digitalocean.Vpc('custom-agent-vpc', {
   region: 'nyc1',
   ipRange: '172.16.0.0/24',
 })
 
-// Add your SSH key at the top of the file
-const sshKeys = ['66:bc:e3:52:ff:b6:bf:0d:c5:26:ae:5f:f3:c1:ea:8f'] // Replace with your DO SSH key fingerprint
+// Create a Redis cluster
+const redisDb = new digitalocean.DatabaseCluster('custom-agent-redis', {
+  engine: 'redis',
+  version: '7',
+  size: 'db-s-1vcpu-1gb',
+  region: 'nyc1',
+  nodeCount: 1,
+  privateNetworkUuid: vpc.id,
+})
+
+// Add your SSH key for ssh access to the droplets
+const sshKeys = [''] // Replace with your DO SSH key fingerprint
 
 // Helper function to create agent droplets with consistent configuration
 // Each agent runs in a Docker container and handles OpenAI API requests
@@ -303,6 +304,13 @@ new digitalocean.Firewall('custom-agent-firewall', {
     },
   ],
   outboundRules: [
+    // Restrict Redis access to VPC only
+    {
+      protocol: 'tcp',
+      portRange: '6379', // Redis port
+      destinationAddresses: [vpc.ipRange],
+    },
+    // General outbound traffic
     {
       protocol: 'tcp',
       portRange: '1-65535',
