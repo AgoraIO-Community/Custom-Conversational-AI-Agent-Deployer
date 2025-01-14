@@ -20,7 +20,7 @@ pulumi stack init dev
 2. Configure the required secrets:
 
 ```bash
-pulumi config set --secret digitalocean:token <YOUR_DIGITALOCEAN_API_TOKEN>
+pulumi config set --secret digitalocean:token <YOUR_DIGITAL_OCEAN_API_TOKEN>
 pulumi config set --secret agoraAppId <YOUR_AGORA_APP_ID>
 pulumi config set --secret agoraAppCert <YOUR_AGORA_APP_CERT>
 pulumi config set --secret openaiApiKey <YOUR_OPENAI_API_KEY>
