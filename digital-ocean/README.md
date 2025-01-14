@@ -27,6 +27,12 @@ pulumi config set --secret openaiApiKey <YOUR_OPENAI_API_KEY>
 pulumi config set systemInstruction "Your custom system prompt here..."
 ```
 
+Add your SSH key fingerprint to the `index.ts` file:
+
+```bash
+const sshKeys = [''] // Replace with your DO SSH key fingerprint
+```
+
 3. Deploy using Pulumi:
 
 ```bash
