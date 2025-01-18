@@ -1,8 +1,10 @@
-# custom_conversational_ai
+# Custom Conversational AI Agents
 
-This repository contains Pulumi scripts for deploying a custom conversational AI agents using scripting to setup the infrastructure.
+Conversational AI Agents are semi-autonomous microservices that ingest audio streams with direct connections to large language models to process user conversations and return audio-native responses. This repository contains the scripting to setup the infrastructure and for the agent servers.
 
-Platforms:
+The client is a user interface that allows users to interact with the agent, and for demo purposes we've created a simple [client](https://github.com/AgoraIO-Community/conversational-ai-client) that you can use to test the agent.
+
+Supported Hosting Services:
 
 - [AWS](aws/README.md)
 - Azure **(Coming Soon)**
@@ -11,10 +13,10 @@ Platforms:
 
 ## Prerequisites
 
-- [Pulumi CLI](https://www.pulumi.com/docs/get-started/install/)
-- [Node.js](https://nodejs.org/) (v14 or later)
 - [Agora Account](https://www.agora.io/en/signup/)
 - [OpenAI Account](https://platform.openai.com/signup/)
+- [Pulumi CLI](https://www.pulumi.com/docs/get-started/install/)
+- [Node.js](https://nodejs.org/) (v14 or later)
 
 ## Installation
 
@@ -31,7 +33,7 @@ Platforms:
    ./clone_repos.sh
    ```
 
-3. Navigate to the platform you want to deploy to:
+3. Navigate to the folder for the platform you want to deploy to:
 
    AWS
 
@@ -45,11 +47,15 @@ Platforms:
    cd digital-ocean
    ```
 
-4. Open the `README.md` file for the platform you want to deploy to and follow the instructions to configure the secrets and deploy the infrastructure.
+4. Open the platform's `README.md` file and follow the instructions to configure the secrets and deploy the infrastructure.
 
 ## Customizing the System Prompt
 
 To customize the system prompt, set the `systemInstruction` for the platform you want to deploy to, this will avoid modifying the agent code directly.
+
+## Customizing the Agent's Tools
+
+To customize the agent's tools, you will need to modify the agent code directly. After executing the clone script, you will find an example of how to add a new tool is defined in the `realtime_agent/realtime/tools_example.py` file. Once the tools are defined, initialize them in the `agent.py` file, and pass them to the agent as a parameter.
 
 ## Scaling
 
