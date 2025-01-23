@@ -1,5 +1,5 @@
-name: azure
-description: A minimal Azure Native TypeScript Pulumi program
+name: custom-conversational-ai-azure
+description: A Typescript Pulumi program for deploying custom conversational ai agents on Azure
 runtime:
   name: nodejs
   options:
