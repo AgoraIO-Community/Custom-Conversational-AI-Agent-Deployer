@@ -135,8 +135,14 @@ exec 1>/var/log/agent-startup.log 2>&1
 echo "Starting agent setup at $(date)"
 
 # Install Docker
+apt-get update
+apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 curl -fsSL https://get.docker.com -o get-docker.sh
 sh get-docker.sh
+
+# Start Docker service
+systemctl enable docker
+systemctl start docker
 
 # Wait for Docker to be ready
 for i in {1..30}; do
