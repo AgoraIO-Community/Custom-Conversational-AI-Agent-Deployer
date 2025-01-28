@@ -29,6 +29,8 @@ pulumi config set --secret openaiApiKey <YOUR_OPENAI_API_KEY>
 pulumi config set systemInstruction "Your custom system prompt here..."
 ```
 
+> Note: We recommend creating a new IAM user and using [policy.json](./policy.json) to grant only necessary permissions.
+
 3. Deploy using Pulumi:
 
 ```bash
@@ -75,7 +77,7 @@ This will show:
 
 ## Development
 
-The infrastructure code is in `index.ts` and includes:
+The [infrastructure code](./index.ts) includes:
 
 - Container registry setup (ECR repositories for proxy and agent)
 - VPC configuration with public/private subnets
@@ -85,8 +87,6 @@ The infrastructure code is in `index.ts` and includes:
 - Network security and IAM configuration
 
 ## Architecture
-
-The infrastructure consists of:
 
 - **VPC Infrastructure**
 
@@ -155,8 +155,4 @@ The infrastructure consists of:
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
+We welcome contributions to this project. Please see the [CONTRIBUTING.md](../CONTRIBUTING.md) file for more information.
