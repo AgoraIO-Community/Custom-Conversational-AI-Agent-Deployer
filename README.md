@@ -67,3 +67,7 @@ To scale up there are a two options that can be used separately or together:
 
 1. Use more powerful instances for the agent instances
 2. Increase the number of agent instances
+
+## Contributing
+
+We welcome contributions to this project. Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
