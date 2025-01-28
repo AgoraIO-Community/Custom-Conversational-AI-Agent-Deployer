@@ -88,6 +88,51 @@ The [infrastructure code](./index.ts) includes:
 
 ## Architecture
 
+```mermaid
+graph TD
+    %% Client
+    Internet((Client))
+
+    %% AWS VPC Container
+    subgraph VPC["AWS VPC"]
+
+        %% Public Subnet
+        subgraph PublicSubnet["Public Subnet"]
+            ProxyRouter["Proxy Router<br/>(t3.micro)"]
+        end
+
+        %% Private Subnet
+        subgraph PrivateSubnet["Private Subnet"]
+            Redis["Redis Cluster<br/>(Stores:<br/>Requests + ClientX-ID)"]
+            Agent1["Agent Instance 1<br/>(c5.xlarge)"]
+            Agent2["Agent Instance 2<br/>(c5.xlarge)"]
+            Agent3["Agent Instance 3<br/>(c5.xlarge)"]
+        end
+
+    end
+
+    %% Connections
+    Internet --> ProxyRouter
+    ProxyRouter --> Redis
+    Redis --> ProxyRouter
+    ProxyRouter --> Agent1
+    ProxyRouter --> Agent2
+    ProxyRouter --> Agent3
+
+    %% Styling
+    classDef vpc fill:#f5f5f5,stroke:#333,stroke-width:2px
+    classDef subnet fill:#e1f5fe,stroke:#333,stroke-width:1px
+    classDef gateway fill:#00b002,stroke:#333,stroke-width:1px
+    classDef component fill:#000,stroke:#333,stroke-width:1px
+    classDef storage fill:#a02,stroke:#333,stroke-width:2px
+
+    class VPC vpc
+    class PublicSubnet,PrivateSubnet subnet
+    class ProxyRouter gateway
+    class Agent1,Agent2,Agent3 component
+    class Redis storage
+```
+
 - **VPC Infrastructure**
 
   - Configured across 2 availability zones
