@@ -7,7 +7,7 @@ For demo purposes we've created a simple [client](https://github.com/AgoraIO-Com
 Supported Hosting Services:
 
 - [AWS](aws/README.md)
-- Azure **(Coming Soon)**
+- Azure **([In Progress](https://github.com/AgoraIO-Community/Custom-Conversational-AI-Agent-Deployer/tree/azure/azure))**
 - [DigitalOcean](digital-ocean/README.md)
 - GCP **(Coming Soon)**
 
