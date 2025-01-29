@@ -1,6 +1,6 @@
 # Custom Conversational AI Agents
 
-Conversational AI Agents are semi-autonomous microservices that ingest audio streams with direct connections to large language models to process user conversations and return audio-native responses. This repository contains the scripting to setup the infrastructure and for the agent servers.
+Conversational AI Agents are semi-autonomous microservices that ingest audio streams with direct connections to large language models to process user conversations and return audio-native responses. This repository contains the scripting to setup the infrastructure for the agent servers.
 
 The client is a user interface that allows users to interact with the agent, and for demo purposes we've created a simple [client](https://github.com/AgoraIO-Community/conversational-ai-client) that you can use to test the agent.
 
