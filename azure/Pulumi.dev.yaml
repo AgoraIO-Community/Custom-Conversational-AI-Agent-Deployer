@@ -1,23 +1,25 @@
 config:
-  azure-native:clientId:
-    secure:
-  azure-native:clientSecret:
-    secure:
-  azure-native:tenantId:
-    secure:
-  azure-native:subscriptionId:
-    secure:
-  azure-native:location: WestUS2
   pulumi:template: typescript
+  azure-native:clientId:
+    secure: null
+  azure-native:clientSecret:
+    secure: null
+  azure-native:tenantId:
+    secure: null
+  azure-native:subscriptionId:
+    secure: null
+  azure-native:location: WestUS2
   custom-conversational-ai-azure:agoraAppCert:
-    secure:
+    secure: null
   custom-conversational-ai-azure:agoraAppId:
-    secure:
+    secure: null
   custom-conversational-ai-azure:allowOrigin: '*'
   custom-conversational-ai-azure:mappingTtlInSeconds: '3600'
   custom-conversational-ai-azure:maxRequestsPerBackend: '11'
   custom-conversational-ai-azure:openaiApiKey:
-    secure:
+    secure: null
   custom-conversational-ai-azure:openaiModel: gpt-4o-realtime-preview
   custom-conversational-ai-azure:proxyPort: '8080'
-  custom-conversational-ai-azure:systemInstruction: 
+  custom-conversational-ai-azure:systemInstruction: null
+  custom-conversational-ai-azure:sshPublicKey:
+    secure: null
