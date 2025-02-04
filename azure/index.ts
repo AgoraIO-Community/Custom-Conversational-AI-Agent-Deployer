@@ -19,6 +19,7 @@ const dockerBuildOptions = {
 };
 
 const appName = 'custom-agent';
+const sshPublicKey = config.require('sshPublicKey');
 
 // Create a resource group
 const resourceGroup = new resources.ResourceGroup(`${appName}-rg`);
@@ -56,19 +57,17 @@ const acr = new containerregistry.Registry(`${registryName}Registry`, {
 });
 
 // Get ACR credentials
-const acrCredentials = pulumi
-  .all([resourceGroup.name, acr.name])
-  .apply(async ([rgName, acrName]) => {
-    const creds = await containerregistry.listRegistryCredentials({
-      resourceGroupName: rgName,
-      registryName: acrName,
-    });
-    return {
-      server: acr.loginServer,
-      username: creds.username!,
-      password: creds.passwords![0].value!,
-    };
+const acrCredentials = pulumi.all([resourceGroup.name, acr.name]).apply(async ([rgName, acrName]) => {
+  const creds = await containerregistry.listRegistryCredentials({
+    resourceGroupName: rgName,
+    registryName: acrName,
   });
+  return {
+    server: acr.loginServer,
+    username: creds.username!,
+    password: creds.passwords![0].value!,
+  };
+});
 
 // Build and push the proxy router image
 const proxyImage = new docker.Image(`${appName}-proxy-router`, {
@@ -137,8 +136,19 @@ const proxyNsg = new network.NetworkSecurityGroup(`${appName}-proxy-nsg`, {
   resourceGroupName: resourceGroup.name,
   securityRules: [
     {
-      name: 'allow-http',
+      name: 'allow-ssh',
       priority: 100,
+      direction: 'Inbound',
+      access: 'Allow',
+      protocol: 'Tcp',
+      sourcePortRange: '*',
+      destinationPortRange: '22',
+      sourceAddressPrefix: '*',
+      destinationAddressPrefix: '*',
+    },
+    {
+      name: 'allow-http',
+      priority: 110,
       direction: 'Inbound',
       access: 'Allow',
       protocol: 'Tcp',
@@ -164,9 +174,7 @@ const createAgentVm = (name: string, index: number) => {
     ipConfigurations: [
       {
         name: 'ipconfig',
-        subnet: {
-          id: privateSubnet.get(),
-        },
+        subnet: privateSubnet.apply((id) => ({ id })),
         publicIPAddress: {
           id: publicIp.id,
         },
@@ -188,23 +196,44 @@ const createAgentVm = (name: string, index: number) => {
       ],
     },
     hardwareProfile: {
-      vmSize: 'Standard_F4s_v2', // 4 vCPUs, 8 GB RAM
+      //  vmSize: 'Standard_F4s_v2', // 4 vCPUs, 8 GB RAM
+      vmSize: 'Standard_D2s_v3', // 2 vCPUs, 8 GB RAM - Smaller VM size (for basic tier)
     },
     osProfile: {
       computerName: `${appName}-${name}`,
       adminUsername: 'azureuser',
+      linuxConfiguration: {
+        disablePasswordAuthentication: true,
+        ssh: {
+          publicKeys: [
+            {
+              path: `/home/azureuser/.ssh/authorized_keys`,
+              keyData: sshPublicKey,
+            },
+          ],
+        },
+      },
       customData: Buffer.from(
         `#!/bin/bash
 set -euo pipefail
 
+exec 1> >(logger -s -t $(basename $0)) 2>&1
+
+echo "[startup] Beginning custom data script execution..."
+
 # Install Docker
+echo "[startup] Installing Docker..."
 curl -fsSL https://get.docker.com -o get-docker.sh
 sh get-docker.sh
 
-# Login to ACR
-az acr login --name ${acr.name}
+# Login to ACR using credentials directly
+echo "[startup] Logging into ACR..."
+docker login ${acr.loginServer} -u ${acrCredentials.apply((creds) => creds.username)} -p ${acrCredentials.apply(
+          (creds) => creds.password,
+        )}
 
 # Create environment file
+echo "[startup] Creating environment file..."
 cat > /etc/agent.env << EOL
 AGORA_APP_ID=${config.requireSecret('agoraAppId')}
 AGORA_APP_CERT=${config.requireSecret('agoraAppCert')}
@@ -217,14 +246,18 @@ WRITE_RTC_PCM=false
 EOL
 
 # Pull and run agent container
+echo "[startup] Pulling agent container..."
 docker pull ${agentImage.imageName}
+echo "[startup] Starting agent container..."
 docker run -d \\
     --name agent \\
     -p 8080:8080 \\
     --env-file /etc/agent.env \\
     --restart unless-stopped \\
     ${agentImage.imageName}
-`
+
+echo "[startup] Startup script completed."
+`,
       ).toString('base64'),
     },
     storageProfile: {
@@ -243,14 +276,12 @@ docker run -d \\
 };
 
 // Create agent VMs
-const agents = Array.from({ length: 3 }, (_, i) =>
-  createAgentVm(`agent-${i + 1}`, i)
-);
+const agents = Array.from({ length: 3 }, (_, i) => createAgentVm(`agent-${i + 1}`, i));
 
 // Create proxy router VM
 const proxyPublicIp = new network.PublicIPAddress(`${appName}-proxy-ip`, {
   resourceGroupName: resourceGroup.name,
-  publicIPAllocationMethod: 'Dynamic',
+  publicIPAllocationMethod: 'Static',
 });
 
 const proxyNic = new network.NetworkInterface(`${appName}-proxy-nic`, {
@@ -258,9 +289,7 @@ const proxyNic = new network.NetworkInterface(`${appName}-proxy-nic`, {
   ipConfigurations: [
     {
       name: 'ipconfig',
-      subnet: {
-        id: publicSubnet.get(),
-      },
+      subnet: publicSubnet.apply((id) => ({ id })),
       publicIPAddress: {
         id: proxyPublicIp.id,
       },
@@ -293,35 +322,73 @@ const proxyVm = new compute.VirtualMachine(`${appName}-proxy-router`, {
   osProfile: {
     computerName: `${appName}-proxy-router`,
     adminUsername: 'azureuser',
-    customData: pulumi.interpolate`#!/bin/bash
+    linuxConfiguration: {
+      disablePasswordAuthentication: true,
+      ssh: {
+        publicKeys: [
+          {
+            path: `/home/azureuser/.ssh/authorized_keys`,
+            keyData: sshPublicKey,
+          },
+        ],
+      },
+    },
+    customData: pulumi
+      .all([
+        agentIps,
+        redisCache.hostName,
+        redisCache.accessKeys.primaryKey,
+        proxyImage.imageName,
+        acr.loginServer,
+        acrCredentials,
+      ])
+      .apply(([ips, redisHost, redisPrimaryKey, imageName, acrServer, creds]) => {
+        const script = `#!/bin/bash
 set -euo pipefail
 
+exec 1> >(logger -s -t $(basename $0)) 2>&1
+
+echo "[startup] Beginning custom data script execution..."
+
 # Install Docker
+echo "[startup] Installing Docker..."
 curl -fsSL https://get.docker.com -o get-docker.sh
 sh get-docker.sh
 
-# Login to ACR
-az acr login --name ${acr.name}
+# Install Azure CLI
+echo "[startup] Installing Azure CLI..."
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+# Login to ACR using Azure CLI
+echo "[startup] Logging into ACR..."
+az acr login --name ${acrServer} --username ${creds.username} --password "${creds.password}"
 
 # Create environment file
-cat > /etc/proxy.env << EOL
-BACKEND_IPS=${agentIps}
+echo "[startup] Creating environment file..."
+cat > /etc/proxy.env << 'EOL'
+BACKEND_IPS=${ips}
 MAX_REQUESTS_PER_BACKEND=${config.require('maxRequestsPerBackend')}
-REDIS_URL=redis://${redisCache.hostName}:6379
+REDIS_URL=redis://:${redisPrimaryKey}@${redisHost}:6379
 PORT=8080
 ALLOW_ORIGIN=*
 MAPPING_TTL_IN_S=3600
 EOL
 
 # Pull and run proxy container
-docker pull ${proxyImage.imageName}
+echo "[startup] Pulling proxy container..."
+docker pull ${imageName}
+
+echo "[startup] Starting proxy container..."
 docker run -d \\
     --name proxy \\
     -p 8080:8080 \\
     --env-file /etc/proxy.env \\
     --restart unless-stopped \\
-    ${proxyImage.imageName}
-`.apply((s) => Buffer.from(s).toString('base64')),
+    ${imageName}
+
+echo "[startup] Startup script completed."`;
+        return Buffer.from(script).toString('base64');
+      }),
   },
   storageProfile: {
     imageReference: {
@@ -349,6 +416,7 @@ export const outputs = {
   proxy: {
     resourceId: proxyVm.id,
     publicIpId: proxyPublicIp.id,
+    publicIp: proxyPublicIp.ipAddress,
   },
   registry: {
     loginServer: acr.loginServer,
