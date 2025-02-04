@@ -21,13 +21,14 @@ pulumi stack init dev
 2. Configure the required secrets:
 
 ```bash
-pulumi config set --secret azure:clientId <YOUR_AZURE_CLIENT_ID>
-pulumi config set --secret azure:clientSecret <YOUR_AZURE_CLIENT_SECRET>
-pulumi config set --secret azure:tenantId <YOUR_AZURE_TENANT_ID>
-pulumi config set --secret azure:subscriptionId <YOUR_AZURE_SUBSCRIPTION_ID>
+pulumi config set --secret azure-native:clientId <YOUR_AZURE_CLIENT_ID>
+pulumi config set --secret azure-native:clientSecret <YOUR_AZURE_CLIENT_SECRET>
+pulumi config set --secret azure-native:tenantId <YOUR_AZURE_TENANT_ID>
+pulumi config set --secret azure-native:subscriptionId <YOUR_AZURE_SUBSCRIPTION_ID>
 pulumi config set --secret agoraAppId <YOUR_AGORA_APP_ID>
 pulumi config set --secret agoraAppCert <YOUR_AGORA_APP_CERT>
 pulumi config set --secret openaiApiKey <YOUR_OPENAI_API_KEY>
+pulumi config set --secret sshPublicKey <YOUR_SSH_PUBLIC_KEY>
 pulumi config set openaiModel <OPENAI_MODEL_NAME>
 pulumi config set maxRequestsPerBackend <MAX_REQUESTS>
 ```
@@ -92,16 +93,19 @@ The infrastructure code is in `index.ts` and includes:
 The infrastructure consists of:
 
 - **Virtual Network**
+
   - Public and private subnets
   - Network security groups for access control
   - Configured address space: 10.0.0.0/16
 
 - **Azure Container Registry (ACR)**
+
   - Basic SKU registry
   - Hosts Docker images for proxy and agent
   - Admin access enabled for Docker authentication
 
 - **Compute Resources**
+
   - Agent VMs (3x Standard_F4s_v2)
     - 4 vCPUs, 8GB RAM per instance
     - Deployed in private subnet
@@ -114,6 +118,7 @@ The infrastructure consists of:
     - Manages agent connection mapping
 
 - **Azure Cache for Redis**
+
   - Basic SKU, 1GB cache
   - Non-SSL port enabled
   - Used for session state and routing information
@@ -141,4 +146,4 @@ The infrastructure consists of:
 2. Create your feature branch
 3. Commit your changes
 4. Push to the branch
-5. Create a new Pull Request 
+5. Create a new Pull Request
