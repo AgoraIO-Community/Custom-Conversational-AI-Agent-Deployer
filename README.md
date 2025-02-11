@@ -27,7 +27,7 @@ Supported Hosting Services:
    cd custom_conversational_ai
    ```
 
-2. Run the clone script to fetch [agent](https://github.com/AgoraIO/openai-realtime-python) and [agent-router](https://github.com/AgoraIO-Community/conversational-ai-agent-router) repositories.
+2. Run the clone script to fetch [agent](https://github.com/AgoraIO/openai-realtime-python) and [agent-router](https://github.com/AgoraIO-Community/openai-realtime-agent-router) repositories.
 
    ```bash
    ./clone_repos.sh
